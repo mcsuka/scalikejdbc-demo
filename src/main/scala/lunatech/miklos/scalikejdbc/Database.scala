@@ -20,25 +20,9 @@ object Database {
     ds.setUser("sa")
     ds.setPassword("sa")
 
-    val pool = DataSourceConnectionPool(ds)
-//    ConnectionPool.singleton(pool)
-    pool
+    DataSourceConnectionPool(ds)
   }
 
-//  private val customerSql =
-//    sql"""create table customer (
-//      |  customer_id VARCHAR(32) NOT NULL,
-//      |  name VARCHAR(255) NOT NULL,
-//      |  CONSTRAINT customer_pk PRIMARY KEY (customer_id)
-//      |)""".stripMargin
-//  private val orderSql =
-//    sql"""create table order (
-//      |  customer_id VARCHAR(32) NOT NULL,
-//      |  order_id VARCHAR(32) NOT NULL,
-//      |  order_status VARCHAR(32) NOT NULL,
-//      |  CONSTRAINT order_pk PRIMARY KEY (order_id),
-//      |  CONSTRAINT fk_customer FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
-//      |)""".stripMargin
   private val orderItemsSql =
     sql"""create table order_items (
       |  order_id VARCHAR(32) NOT NULL,
@@ -53,18 +37,12 @@ object Database {
          |  CONSTRAINT product_stock_pk PRIMARY KEY (product_id)
          |)""".stripMargin
 
-  private val stock = Seq(
-    ("apple", 10),
-    ("banana", 10),
-    ("pear", 10),
-    ("orange", 10)
-  ).map((id, amount) => Seq(id, amount))
-
   private def initTables(connectionPool: ConnectionPool): Unit = {
     DB(connectionPool.borrow()).localTx { implicit dbSession =>
       orderItemsSql.execute.apply()
       productStockSql.execute.apply()
 
+      val stock = TestData.stock.map((id, amount) => Seq(id, amount))
       sql"INSERT INTO product_stock VALUES (?, ?)".batch(stock: _*).apply()
     }
   }
