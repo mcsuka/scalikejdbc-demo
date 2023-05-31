@@ -22,12 +22,12 @@ object Application {
     implicit val ec: ExecutionContext =
       ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(8)) // change to 4
 
-    TestData.orders.foreach((id, items) =>
+    TestData.orders.foreach(order =>
       repo
-        .addOrderItems(id, items)
+        .addOrderItems(order.orderId, order.items)
         .onComplete {
-          case Success(value) => log(s"order $id succeeded: $value")
-          case Failure(exception) => log(s"order $id failed: $exception")
+          case Success(value) => log(s"order ${order.orderId} succeeded: $value")
+          case Failure(exception) => log(s"order ${order.orderId} failed: $exception")
         }
     )
 

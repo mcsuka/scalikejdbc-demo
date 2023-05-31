@@ -20,14 +20,14 @@ object TestData {
     ("pineapple", 10)
   )
 
-  val orders: Seq[(String, Seq[OrderItem])] = Seq(
-    ("o001", Seq(OrderItem("apple", 4), OrderItem("pear", 4))),
-    ("o002", Seq(OrderItem("orange", 4), OrderItem("pineapple", 4))),
-    ("o003", Seq(OrderItem("orange", 4), OrderItem("apple", 4))),
-    ("o004", Seq(OrderItem("banana", 4), OrderItem("pear", 4))),
-    ("o005", Seq(OrderItem("orange", 4), OrderItem("pear", 4))),
-    ("o006", Seq(OrderItem("banana", 4), OrderItem("pineapple", 4))),
-    ("o007", Seq(OrderItem("banana", 4), OrderItem("apple", 4))),
-    ("o008", Seq(OrderItem("pineapple", 4)))
+  val orders: Seq[Order] = Seq(
+    Order("o001", Seq(OrderItem("apple", 4), OrderItem("pear", 4))),
+    Order("o002", Seq(OrderItem("orange", 4), OrderItem("pineapple", 4))),
+    Order("o003", Seq(OrderItem("orange", 4), OrderItem("apple", 4))),
+    Order("o004", Seq(OrderItem("banana", 4), OrderItem("pear", 4))),
+    Order("o005", Seq(OrderItem("orange", 4), OrderItem("pear", 4))),
+    Order("o006", Seq(OrderItem("banana", 4), OrderItem("pineapple", 4))),
+    Order("o007", Seq(OrderItem("banana", 4), OrderItem("apple", 4))),
+    Order("o008", Seq(OrderItem("pineapple", 4)))
   )
 }

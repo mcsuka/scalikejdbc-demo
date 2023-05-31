@@ -17,7 +17,7 @@ object IOApplication extends IOApp {
     val repo = Repository(Database.init())
 
     TestData.orders
-      .map((id, items) => repo.addOrderItems(id, items))
+      .map(order => repo.addOrderItems(order.orderId, order.items))
       .zipWithIndex
       .parTraverse((io, idx) =>
         io.start.flatMap(fiber =>

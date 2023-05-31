@@ -17,10 +17,10 @@ object Application {
 
   private def sequentialExecution(repo: Repository): Unit = {
 
-    TestData.orders.foreach((id, items) =>
-      repo.addOrderItemsSequential(id, items) match {
-        case Left(exception) => log(s"order $id failed: $exception")
-        case Right(value) => log(s"order $id succeeded: $value")
+    TestData.orders.foreach(order =>
+      repo.addOrderItemsSequential(order.orderId, order.items) match {
+        case Left(exception) => log(s"order ${order.orderId} failed: $exception")
+        case Right(value) => log(s"order ${order.orderId} succeeded: $value")
       }
     )
 
