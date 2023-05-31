@@ -1,6 +1,6 @@
 package lunatech.miklos.scalikejdbc.future
 
-import lunatech.miklos.scalikejdbc.TestData.timestamp
+import lunatech.miklos.scalikejdbc.TestData.log
 import lunatech.miklos.scalikejdbc.{Order, OrderItem}
 
 import scala.concurrent.{ExecutionContext, Future, blocking}
@@ -13,36 +13,9 @@ class Repository(connectionPool: ConnectionPool) {
   def addOrderItems(orderId: String, items: Seq[OrderItem])
     (implicit executionContext: ExecutionContext): Future[Option[Order]] =
     DB(connectionPool.borrow()).futureLocalTx { implicit session =>
-      println(s"${timestamp()} Add order items $orderId in thread ${Thread.currentThread().getName}")
-      Future {
-        blocking {
-          items.foreach { item =>
-            println(s"${timestamp()} Add order item $orderId ${item.productId} in thread ${Thread.currentThread().getName}")
-
-            val allocated =
-              sql"""
-              update product_stock set available = available - ${item.quantity}
-              where product_id = ${item.productId} and available >= ${item.quantity}"""
-                .update()
-
-            if (allocated == 0)
-              throw new IllegalStateException(s"There is not enough stock available for product ${item.productId}")
-
-            sql"""
-            insert into order_items (order_id, product_id, quantity)
-            values ($orderId, ${item.productId}, ${item.quantity})"""
-              .update()
-          }
-        }
-      }
-    }.map(_ => getOrder(orderId))
-
-  def addOrderItemsParallel(orderId: String, items: Seq[OrderItem])
-    (implicit executionContext: ExecutionContext): Future[Option[Order]] =
-    DB(connectionPool.borrow()).futureLocalTx { implicit session =>
-      println(s"${timestamp()} Add order items $orderId in thread ${Thread.currentThread().getName}")
+      log(s"Add order items $orderId")
       addOrderItemsRecursive(orderId, items)
-    }.map(_ => getOrder(orderId))
+    }.flatMap(_ => getOrder(orderId))
 
   private def addOrderItemsRecursive(orderId: String, items: Seq[OrderItem])
     (implicit session: DBSession, executionContext: ExecutionContext): Future[Unit] = {
@@ -63,7 +36,7 @@ class Repository(connectionPool: ConnectionPool) {
     (implicit session: DBSession, executionContext: ExecutionContext): Future[Unit] =
     Future {
       blocking {
-        println(s"${timestamp()} Add order item $orderId ${item.productId} in thread ${Thread.currentThread().getName}")
+        log(s"Add order item $orderId ${item.productId}")
         sql"""
         insert into order_items (order_id, product_id, quantity)
         values ($orderId, ${item.productId}, ${item.quantity})"""
@@ -75,7 +48,8 @@ class Repository(connectionPool: ConnectionPool) {
     (implicit session: DBSession, executionContext: ExecutionContext): Future[Unit] =
     Future {
       blocking {
-        println(s"${timestamp()} Allocate stock $orderId ${item.productId} in thread ${Thread.currentThread().getName}")
+        log(s"Allocate stock $orderId ${item.productId}")
+
         val updated =
           sql"""
           update product_stock set available = available - ${item.quantity}
@@ -87,26 +61,20 @@ class Repository(connectionPool: ConnectionPool) {
       }
     }
 
-  def getOrder(orderId: String): Option[Order] = {
-    println(s"${timestamp()} Get order $orderId in thread ${Thread.currentThread().getName}")
-    DB(connectionPool.borrow()).readOnly { implicit session =>
-      val items = sql"select product_id, quantity from order_items where order_id = $orderId"
-        .map(rs => OrderItem(rs.string(1), rs.int(2)))
-        .list
-        .apply()
+  private def getOrder(orderId: String)
+    (implicit executionContext: ExecutionContext): Future[Option[Order]] =
+    DB(connectionPool.borrow()).futureLocalTx { implicit session =>
+      Future {
+        blocking {
+          log(s"Get order $orderId")
 
-      Option.when(items.nonEmpty)(Order(orderId, items))
+          val items = sql"select product_id, quantity from order_items where order_id = $orderId"
+            .map(rs => OrderItem(rs.string(1), rs.int(2)))
+            .list
+            .apply()
+
+          Option.when(items.nonEmpty)(Order(orderId, items))
+        }
+      }
     }
-  }
-
-  def getOrders: Iterable[Order] =
-    DB(connectionPool.borrow()).readOnly { implicit session =>
-      sql"select order_id, product_id, quantity from order_items"
-        .map(rs => rs.string(1) -> OrderItem(rs.string(2), rs.int(3)))
-        .list
-        .apply()
-        .groupBy((id, item) => id)
-        .map((id, items) => Order(id, items.map(_._2)))
-    }
-
 }

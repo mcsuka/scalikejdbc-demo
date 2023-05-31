@@ -1,13 +1,13 @@
 package lunatech.miklos.scalikejdbc.future
 
-import lunatech.miklos.scalikejdbc.TestData.timestamp
+import lunatech.miklos.scalikejdbc.Database.getOrders
+import lunatech.miklos.scalikejdbc.TestData.log
 import lunatech.miklos.scalikejdbc.{Database, OrderItem, TestData}
 import scalikejdbc.ConnectionPool
 
 import java.util.concurrent.Executors
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.DurationInt
-
 import scala.util.{Failure, Success}
 
 object Application {
@@ -24,16 +24,15 @@ object Application {
 
     TestData.orders.foreach((id, items) =>
       repo
-//        .addOrderItems(id, items)
-        .addOrderItemsParallel(id, items)
+        .addOrderItems(id, items)
         .onComplete {
-          case Success(value) => println(s"${timestamp()} order $id succeeded: $value")
-          case Failure(exception) => println(s"${timestamp()} order $id failed: $exception")
+          case Success(value) => log(s"order $id succeeded: $value")
+          case Failure(exception) => log(s"order $id failed: $exception")
         }
     )
 
     Thread.sleep(1000)
-    println("\nPending Orders:\n" + repo.getOrders.mkString("\n"))
+    log("Pending Orders:\n" + getOrders.mkString("\n"))
   }
 
 }

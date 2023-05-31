@@ -5,7 +5,8 @@ import cats.effect.kernel.Outcome
 import scala.concurrent.duration.DurationInt
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.parallel.*
-import lunatech.miklos.scalikejdbc.TestData.timestamp
+import lunatech.miklos.scalikejdbc.Database.getOrders
+import lunatech.miklos.scalikejdbc.TestData.log
 import lunatech.miklos.scalikejdbc.{Database, Order, OrderItem, TestData}
 import scalikejdbc.ConnectionPool
 
@@ -20,15 +21,15 @@ object IOApplication extends IOApp {
       .zipWithIndex
       .parTraverse((io, idx) =>
         io.start.flatMap(fiber =>
-          fiber.join.flatMap {
-            case Outcome.Succeeded(fa) => IO.println(s"${timestamp()} Order $idx success: $fa")
-            case Outcome.Errored(e) => IO.println(s"${timestamp()} Order $idx failure: $e")
-            case Outcome.Canceled() => IO.println(s"${timestamp()} Order $idx cancelled")
+          fiber.join.map {
+            case Outcome.Succeeded(fa) => log(s"Order $idx success: $fa")
+            case Outcome.Errored(e) => log(s"Order $idx failure: $e")
+            case Outcome.Canceled() => log(s"Order $idx cancelled")
           }
         )
       )
       .andWait(300.millis)
-      .flatMap(_ => IO.println("\nPending Orders:\n" + repo.getOrders.mkString("\n")))
+      .map(_ => log("Pending Orders:\n" + getOrders.mkString("\n")))
       .as(ExitCode.Success)
   }
 }

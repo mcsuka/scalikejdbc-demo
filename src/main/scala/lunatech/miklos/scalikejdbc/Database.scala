@@ -4,17 +4,20 @@ import org.h2.jdbcx.JdbcDataSource
 import org.h2.tools.Server
 import scalikejdbc.{ConnectionPool, DB, DataSourceConnectionPool, scalikejdbcSQLInterpolationImplicitDef}
 
+import scala.util.Try
 
 object Database {
 
   def init(): ConnectionPool = {
     val pool = initDb()
+    ConnectionPool.singleton(pool)
+    
     initTables(pool)
 
     pool
   }
 
-  private def initDb(): ConnectionPool = {
+  private def initDb(): DataSourceConnectionPool = {
     val ds = JdbcDataSource()
     ds.setUrl("jdbc:h2:mem:myDb;DB_CLOSE_DELAY=-1")
     ds.setUser("sa")
@@ -46,4 +49,18 @@ object Database {
       sql"INSERT INTO product_stock VALUES (?, ?)".batch(stock: _*).apply()
     }
   }
+
+  def getOrders: Iterable[Order] =
+    Try {
+      DB(ConnectionPool.get().borrow()).readOnly { implicit session =>
+        sql"select order_id, product_id, quantity from order_items"
+          .map(rs => rs.string(1) -> OrderItem(rs.string(2), rs.int(3)))
+          .list
+          .apply()
+          .groupBy((id, item) => id)
+          .map((id, items) => Order(id, items.map(_._2)))
+      }
+    }.getOrElse(Seq.empty)
+  
 }
+

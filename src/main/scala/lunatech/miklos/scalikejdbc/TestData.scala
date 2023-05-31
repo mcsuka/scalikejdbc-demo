@@ -4,8 +4,12 @@ object TestData {
   
   private lazy val startTime: Long = System.currentTimeMillis()
   
-  def timestamp(): String = {
+  private def timestamp(): String = {
     String.format("%4d", System.currentTimeMillis() - startTime)
+  }
+
+  def log(msg: String): Unit = {
+    println(s"${timestamp()} [${Thread.currentThread().getName}] $msg")
   }
 
   val stock: Seq[(String, Int)] = Seq(
