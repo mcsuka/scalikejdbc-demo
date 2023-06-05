@@ -57,7 +57,7 @@ class Repository(connectionPool: ConnectionPool) {
             .update()
 
         if (updated == 0)
-          throw new IllegalStateException(s"There is not enough stock available for product ${item.productId}")
+          throw IllegalStateException(s"There is not enough stock available for product ${item.productId}")
       }
     }
 

@@ -1,9 +1,9 @@
 package lunatech.miklos.scalikejdbc
 
 object TestData {
-  
+
   private lazy val startTime: Long = System.currentTimeMillis()
-  
+
   private def timestamp(): String = {
     String.format("%4d", System.currentTimeMillis() - startTime)
   }

@@ -16,6 +16,8 @@ object IOApplication extends IOApp {
 
     val repo = Repository(Database.init())
 
+    log("Starting IO Application")
+
     TestData.orders
       .map(order => repo.addOrderItems(order.orderId, order.items))
       .zipWithIndex

@@ -49,7 +49,7 @@ class Repository(connectionPool: ConnectionPool) {
         .update()
     ).flatMap(updated =>
       if updated == 0 then
-        IO.raiseError(new IllegalStateException(s"There is not enough stock available for product ${item.productId}"))
+        IO.raiseError(IllegalStateException(s"There is not enough stock available for product ${item.productId}"))
       else
         IO(updated)
     )

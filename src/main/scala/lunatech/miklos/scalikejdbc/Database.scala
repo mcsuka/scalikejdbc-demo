@@ -11,7 +11,7 @@ object Database {
   def init(): ConnectionPool = {
     val pool = initDb()
     ConnectionPool.singleton(pool)
-    
+
     initTables(pool)
 
     pool
@@ -28,11 +28,11 @@ object Database {
 
   private val orderItemsSql =
     sql"""create table order_items (
-      |  order_id VARCHAR(32) NOT NULL,
-      |  product_id VARCHAR(32) NOT NULL,
-      |  quantity INTEGER NOT NULL,
-      |  CONSTRAINT order_item_pk PRIMARY KEY (order_id, product_id)
-      |)""".stripMargin
+         |  order_id VARCHAR(32) NOT NULL,
+         |  product_id VARCHAR(32) NOT NULL,
+         |  quantity INTEGER NOT NULL,
+         |  CONSTRAINT order_item_pk PRIMARY KEY (order_id, product_id)
+         |)""".stripMargin
   private val productStockSql =
     sql"""create table product_stock (
          |  product_id VARCHAR(32) NOT NULL,
@@ -52,7 +52,7 @@ object Database {
 
   def getOrders: Iterable[Order] =
     Try {
-      DB(ConnectionPool.get().borrow()).readOnly { implicit session =>
+      DB.readOnly { implicit session =>
         sql"select order_id, product_id, quantity from order_items"
           .map(rs => rs.string(1) -> OrderItem(rs.string(2), rs.int(3)))
           .list
@@ -61,6 +61,6 @@ object Database {
           .map((id, items) => Order(id, items.map(_._2)))
       }
     }.getOrElse(Seq.empty)
-  
+
 }
 

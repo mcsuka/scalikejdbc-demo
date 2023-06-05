@@ -12,6 +12,8 @@ object Application {
   def main(args: Array[String]): Unit = {
     val repo = Repository(Database.init())
 
+    log("Starting Application")
+
     sequentialExecution(repo)
   }
 
