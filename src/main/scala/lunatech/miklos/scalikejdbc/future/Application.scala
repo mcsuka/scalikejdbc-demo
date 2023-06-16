@@ -33,7 +33,7 @@ object Application {
         }
     )
 
-    Thread.sleep(1000)
+    Thread.sleep(300)
     log("Pending Orders:\n" + getOrders.mkString("\n"))
   }
 
